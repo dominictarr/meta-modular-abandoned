@@ -12,12 +12,11 @@ function MetaModular (name){
   if(!(this instanceof MetaModular)) { return new MetaModular(name) }
   var self = this;
 
-    self.name = name || '.'
-    self.basepath = process.ENV.HOME + "/.meta-modular/"
-    //fs.mkdirSync(self.path,666)
-    easy.ensureDirSync(self.basepath)
+  self.name = name || '.'
+  self.basepath = process.ENV.HOME + "/.meta-modular/"
+
+  easy.ensureDirSync(self.basepath)
     
-//    fs.mkdirSync(self.path)
   self.tests = dirty(self.basepath + 'tests.db')
   self.candidates = dirty(self.basepath + 'candidates.db')
   self.tests.on('load',function(err){
@@ -26,8 +25,6 @@ function MetaModular (name){
   process.nextTick(function(){
     self.emit('ready',self)
   })
-  
-//  return this
 }
 
 MetaModular.prototype.addTest = function (testObj){
@@ -68,7 +65,6 @@ MetaModular.prototype.update = function (callback){
     if (toUpdate.length == 0)
       return callback()
     var t = toUpdate.pop()
-    //console.log("   UPDATE:" + t)
       
     self.update_test(t,updateNext)
   }
@@ -133,8 +129,13 @@ MetaModular.prototype.update_pair = function (test,cand,callback){
     //save results.
     
     var results = self.candidates.get(cand)
+
+//    console.log("before:")
+//    console.log(results)
     results[test] = report.numFailures == 0 ? 'success' : 'failure'
-    //console.log(results)
+//    console.log("after:")
+//    console.log(results)
+//    console.log()
     self.candidates.set(cand,results)
 
     var results_test = self.tests.get(test)
