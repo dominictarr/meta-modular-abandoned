@@ -1,4 +1,38 @@
 
+okay? I can:
+
+add tests
+add candidates
+update (run tests)
+
+get passing modules (for a test)
+get tests passed (for a module)
+
+load tests specified in test.json
+file all the .js files in a project.
+
+whats next?:
+
+1. test runners, so i can run multiple types of tests.
+2. wrap git, so i can download everyone's projects, 
+   and setup meta-modular to have it's own directory.
+3. read up on open source licences.
+4. detect interface and don't test modules which couldn't possibly work.
+5. command line tool and reporting.
+6. web interface. HA!
+
+so far I just have some very trivial tests, 
+I think the next thing has got to be see how far it can be stretched.
+
+for that ill need some sort of reporting... at first i can run it in the repl.
+
+
+~~~~
+OKAY. so the next thing is adding all of my stuff... and seeing if anything breaks. 2:57 AM, Nov 16 2010
+~~~~
+
+
+
 
 okay, 19 days until javascript meetup.
 
@@ -36,8 +70,6 @@ list of candidates
     and test -> property list
       (map test -> propertys -> (intersection of) implementors
     }
-
-
 
 so first task, is given a test, get candidates, 
 stick candidates into test.target and run test.
@@ -94,4 +126,66 @@ $PATH/xyz/lib/xzy.js
 
 make it handle the first dir as the package name so it will go
 for xyz/foo to xyz/lib/xzy/foo.js
+
+
+
+  i need a helper to query this stuff.
+  say things like
+  in tests:
+  { value : {run : {'*' : 'success'}}} 
+  
+  //returns all tests which have a success, and thier passing candidates
+  //accept * string and regular expressions as the key.
+
+  { key: function whatever (){...}}
+
+  returns all objects which whatever(obj) returns true for.
+  put multiple keys in an map to AND them
+  
+  { value: {*:'failure'}
+  , key: /dominictarr\/.+/  
+  }
+  
+  this would return all the failures in modules that where written by me.
+  
+  is this too clever?
+  
+  what is the most important thing to do next?
+  
+  EAT!
+  
+  okay. done that now. whats next most important things?
+  
+  check whether test target is actually loaded. - done. WAAZ EASY
+      get dependencies for module - call back after something loads...
+      oh wait, it's easy. just parse the module cache.
+      could make a custom load that callsback too. (easier)
+
+  test runner with plugable runners (script,asynct,expresso,vows,jasmine,jspec)
+
+  specify test targets in file, and pick them up automaticially...
+      (resolve, then look for test.json
+        then, when you say > meta-modular test dominictarr/remap/test/remap.asynct
+        if finds the test and knows what the target is.
+        you chould shorten it to dominictarr/remap
+        since the test is certainly in the test folder.
+        however, you may want to refur to a specific test.        
+      )
+  specify dependencies in package.json or depends.json 
+  or load them directly in the file 
+
+  so, TODO MONDAY: implement stuff for test.json and depends.json.
+
+  (this would add meta-modular as a dependency, 
+    and since the project should run as it stands, thats a bit heavy)
+
+  wrap git, and automaticially pull
+
+  typesafe module
+
+  object query
+
+  command to run a module
+
+  > meta-modular passes 'test'
 

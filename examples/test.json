@@ -1,0 +1,13 @@
+{ "name" :"meta-modular/examples"
+, "author": "dominictarr"
+, "tests": 
+    { "natural": 
+      { "test": "meta-modular/examples/test/natural.asynct"
+      , "target": "meta-modular/examples/natural"
+      }
+    , "naturalRandom":
+      { "test": "meta-modular/examples/test/natural.random.asynct"
+      , "target": "meta-modular/examples/natural2"
+      }
+    }
+}

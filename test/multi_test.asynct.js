@@ -1,7 +1,7 @@
 //multi_test.asynct.js
 
 var MultiTest = require('meta-modular/multi_test')
-
+  , inspect = require('util').inspect
 function isCalled(test,func,deadline,obj){
   deadline = deadline || 500
   var time = setTimeout(tooLate,deadline)
@@ -27,7 +27,7 @@ function checkTestTrial (test,pass,trial,next){
     return isCalled(test,checkResult) 
     
     function checkResult(status,report){
-      test.equal(status,'complete')
+      test.equal(report.status,'complete')
       console.log(report)
 
       test.equal(report.test,trial.test,'report has correct .test property')
@@ -69,5 +69,19 @@ exports['run a test with a candidate in place of a target'] = function (test){
   checkTestTrial(test,false,fail_trial,next)
   function next(){  
     checkTestTrial(test,true,pass_trial,test.finish)
+  }
+}
+
+exports ['make error if test did not load the candidate as target'] = function (test){
+ var mt = new MultiTest()
+    , wrongTargetTrial = 
+        { test: 'meta-modular/examples/test/natural.random.asynct'
+        , target: 'XXXXX'
+        , candidate: 'meta-modular/examples/natural'
+        }
+  new MultiTest().run(wrongTargetTrial,c)
+  function c(err,report){
+    test.ok(err instanceof Error,"expected error because target was not loaded, but got: " + inspect(err) )
+   test.finish()
   }
 }

@@ -11,6 +11,7 @@ if(module.main === module){
 
 var asynct = require('async_testing')
   , assert = require('assert')
+  , inspect = require('util').inspect
   , modules = require('remap/modules')
   , resolve = require('remap/resolve')
 
@@ -29,11 +30,18 @@ function MultiTest (){
     assert.ok('string' === typeof trial.test,'trial.test is a string')
     assert.ok('string' === typeof trial.target,'trial.target is a string')
     assert.ok('string' === typeof trial.candidate,'trial.candidate is a string')
+    var loaded = []
+      function addLoaded(request,_module){
+        loaded.push(request)
+      }
 
       var tools = {
         resolve: function (request,_module){
 //          console.log("resolve: " + request)
-          if(request === trial.target){ request = trial.candidate }
+          if(request === trial.target){ 
+            request = trial.candidate
+          }
+          addLoaded(request,_module)
           return resolve.resolveModuleFilename(request,_module)
         }
       }
@@ -44,11 +52,21 @@ function MultiTest (){
       asynct.runSuite(_require(trial.test),{onSuiteDone: suiteDone})
       
       function suiteDone(status,report){
+        var err = undefined
         report.test = trial.test
         report.target = trial.target
         report.candidate = trial.candidate
+        report.status = status
+        report.dependencies = loaded
         
-        finished(status,report)
+        if(loaded.indexOf(trial.target) == -1){
+         err = new Error("test :" + trial.test + "\n"
+            + "    did not load target: require('" + trial.target + "')\n"
+            + "    instead loaded: " + inspect (loaded) + "\n"
+            + "    should one of these be the target?"
+            )
+        }
+        finished(err,report)//make this more like normal (err,data)
       }
   }
 }
