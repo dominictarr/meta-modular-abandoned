@@ -1,4 +1,5 @@
 //number sequence
+
 var natural = require('meta-modular/examples/natural2')
 exports['n() gives natual numbers'] = function (test){
   for (i = 0; i < 100; i ++){
@@ -7,5 +8,4 @@ exports['n() gives natual numbers'] = function (test){
   }
   test.finish()
 }
-
 //this is so trivial... guess it's a sign i'm not in a coding mood.

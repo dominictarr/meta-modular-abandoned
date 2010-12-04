@@ -29,6 +29,9 @@ for that ill need some sort of reporting... at first i can run it in the repl.
 
 ~~~~
 OKAY. so the next thing is adding all of my stuff... and seeing if anything breaks. 2:57 AM, Nov 16 2010
+
+... yes! test runners need to be more robust!
+
 ~~~~
 
 

@@ -7,8 +7,9 @@ var dirty = require('dirty')
   , easy = require('easyfs')
   , path = require('path')
   , inspect = require('util').inspect
-//exports.load = load
-MetaModular.prototype = EventEmitter.prototype //new EventEmitter()//;
+  , style = require('style')
+  , log   = console.log
+MetaModular.prototype = EventEmitter.prototype
 
 function MetaModular (name){
   if(!(this instanceof MetaModular)) { return new MetaModular(name) }
@@ -110,42 +111,83 @@ MetaModular.prototype.update_test = function (test,callback){
     if (toUpdate.length == 0)
       return callback()
     var t = toUpdate.pop()
-      //console.log("   UPDATE CANDIDATE>>>" + inspect(t))
-      
+     
     self.update_pair(test,t,updateNext)
   }
 }
+var testing = false
+var queue = []
+
+
 
 MetaModular.prototype.update_pair = function (test,cand,callback){
+
   var self = this;
   assert.equal(typeof callback,'function')
   assert.ok(typeof test,'string')
   assert.ok(typeof cand,'string')
   
-  trial = this.tests.get(test)
-  trial.candidate = cand
-  mt = new MultiTest()
-  mt.run(trial,done)
-  
-  function done(status,report){
+  var trial = 
+    { test: test
+    , target: self.tests.get(test).target
+    , candidate:  cand  } 
+
+  queue.push([trial,callback])
+  if(!testing)
+    next()
+
+  function next(callback){
+    log("running test! ?" + testing + ' tests left:' +queue.length)
+    if(testing)
+      return
+    if(queue.length == 0){
+      testing = false
+      return
+      }
+    testing = true
+
+    var now = queue.shift()
+      , _trial = now[0]
+      , _callback = now[1]
+
+    log("running test")
+    log(trial)
     
-    var results = self.candidates.get(cand)
+    MultiTest.run(_trial,done)
 
-    results[test] = report.numFailures == 0 ? 'success' : 'failure'
-    self.candidates.set(cand,results)
+    function done(status,report){
+      log("~~~ TEST DONE ~~~~~~~~~~~~~~~~")
 
-    var results_test = self.tests.get(test)
-    results_test.run = results_test.run || {}
-    results_test.run[cand] = report.numFailures == 0 ? 'success' : 'failure'
+      log('   test : ' + _trial.test)
+      log('   cand : ' + _trial.candidate)
+      log(' status : ' + report.status)
+      
+      var results = self.candidates.get(_trial.candidate)
 
-    self.tests.set(test,results_test)
+      results[_trial.test] = report.status
+      self.candidates.set(_trial.candidate,results)
 
-    callback(status,report)
+      var results_test = self.tests.get(_trial.test)
+
+      results_test.run = results_test.run || {}
+      results_test.run[_trial.candidate] = report.status
+
+      self.tests.set(_trial.test,results_test)
+
+      console.log('results:')
+      console.log(self.candidates.get(_trial.candidate))
+      console.log(self.tests.get(_trial.test))
+
+      testing = false
+      console.log('CALLBACK>>>')
+      _callback(status,report,self)
+      console.log('<<<CALLBACK')
+      setTimeout(next,1)
+    }
   }
 }
 
 //how could this stuff be improved?
-
 
 MetaModular.prototype.passes = function (test){
   assert.equal(typeof test,'string', 'expected \'test\ to be a name of a test, but was:' + inspect(test))
@@ -164,8 +206,9 @@ MetaModular.prototype.passes = function (test){
 MetaModular.prototype.passedTests = function (candidate){
   assert.equal(typeof candidate,'string', 'expected \'test\ to be a name of a candidate, but was:' + inspect(candidate))
   var runs = this.candidates.get(candidate)
+//    , trial = this.tests.get(candidate)
     , passed = []
-  assert.ok(trial, "there was no test named: " + test)
+//  assert.ok(trial, "there was no test named: " + test)
   assert.ok(runs,"expected to have runs of candidate, but got:" + runs)
 
   for (var test in runs){
@@ -182,12 +225,12 @@ function searchFiles(project_dir,r){
   function searchDir(dirname,list){
     list.forEach(function (e){
       var extension = path.extname(e)
-       if (extension === '') {
+       if (extension === '' && e[0] !== '.') {//ignore hidden file
         try{
           var dirname2 = easy.join(dirname,e)
           searchDir(dirname2,easy.lsSync(path.join(project_dir,dirname2)))
         } catch (err){
-          console.log("NOT A DIRECTORY" + inspect(err))
+          //console.log("NOT A DIRECTORY" + inspect(err))
           //wasn't a directory
         }
       } else if(ext.indexOf(extension) !== -1) {

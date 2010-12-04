@@ -1,76 +1,97 @@
 /*
-natural passes test/natural.asynct, but fails test/natural.random.asynct
-natural2 passes test/natural.asynct, and test/natural.random.asynct
+natural passes test/natural.child, but fails test/natural.random.child
+natural2 passes test/natural.child, and test/natural.random.child
 
 */
 
-/*
-if(module.main === module){
-//  run!
-}*/
 
-var asynct = require('async_testing')
+var child = require('child')
   , assert = require('assert')
-  , inspect = require('util').inspect
-  , modules = require('remap/modules')
-  , resolve = require('remap/resolve')
-
-
-/*
-  what do i have? a test, and a 
-  a test, the target for the test
-  and list of candidates.
-
-*/
-
-function MultiTest (){
+  , inspect = require('inspect')
+  , Remapper = require('remap/remapper')
+  
+function MultiTest (){ // this does not need to be a class!
 
   this.run = run
-  function run (trial,finished){
+  this.unsafe = unsafe
+  
+  function run (trial,finished,adapter) {
+      child.run(
+        { require: __filename
+        , function: 'unsafe'
+        , args: [trial,finished,adapter]
+        , onError: error })
+
+      function error(err){
+        var report = {error: err}
+        makeReport(trial,'loadError',report,[])
+        finished('loadError',report)
+      }
+  }
+
+  function unsafe (trial,finished,adapter){
+    adapter = adapter || 'meta-test/asynct_adapter'
+
     assert.ok('string' === typeof trial.test,'trial.test is a string')
     assert.ok('string' === typeof trial.target,'trial.target is a string')
     assert.ok('string' === typeof trial.candidate,'trial.candidate is a string')
-    var loaded = []
-      function addLoaded(request,_module){
-        loaded.push(request)
-      }
 
-      var tools = {
-        resolve: function (request,_module){
-//          console.log("resolve: " + request)
-          if(request === trial.target){ 
-            request = trial.candidate
-          }
-          addLoaded(request,_module)
-          return resolve.resolveModuleFilename(request,_module)
-        }
-      }
-      _modules = modules.useCache({})
-      
-      _require = _modules.makeRequire(module,{make: _modules.makeMake(tools)})
-    
-      asynct.runSuite(_require(trial.test),{onSuiteDone: suiteDone})
-      
-      function suiteDone(status,report){
-        var err = undefined
-        report.test = trial.test
-        report.target = trial.target
-        report.candidate = trial.candidate
-        report.status = status
-        report.dependencies = loaded
-        
-        if(loaded.indexOf(trial.target) == -1){
+    remaps = {}
+    remaps[trial.target] = trial.candidate
+    r = new Remapper(module,remaps)
+
+    try {
+
+      //somehow, pass _require into here! 
+      //make multi test run with test in it's process. 
+      //then call it.  
+
+      r.require(adapter).runTest(trial.test,{onSuiteDone: suiteDone})
+
+    } catch (err) {
+      var report = makeReport(trial,'loadError',{error: err})
+      suiteDone('loadError',report)
+    }
+
+    function suiteDone(status,report){
+      var err = undefined
+              
+      var loaded = r.loaded ? Object.keys(r.loaded) : []
+      if(!report.error) // if there is already an error, don't over write it!
+        if(loaded.indexOf(trial.candidate) == -1){
          err = new Error("test :" + trial.test + "\n"
-            + "    did not load target: require('" + trial.target + "')\n"
+            + "    did not load candidate: require('" + trial.candidate + "')\n"
             + "    instead loaded: " + inspect (loaded) + "\n"
             + "    should one of these be the target?"
             )
+        report.error = err
+        report.status = 'loadError'
+          status = 'loadError'
         }
-        finished(err,report)//make this more like normal (err,data)
-      }
+      makeReport(trial,status,report,loaded)
+
+      finished(status,report) //make this more like normal (err,data)
+    }
   }
 }
 
+exports.MultiTest = MultiTest
 
+exports.run = function (trial,finished,adapter){
+  new MultiTest().run(trial,finished,adapter)
+}
 
-module.exports = MultiTest
+exports.unsafe = function (trial,finished,adapter){
+  new MultiTest().unsafe(trial,finished,adapter)
+}
+
+function makeReport(trial,status,report,loaded){
+  report = report || {}
+  report.test = trial.test // change to suite
+  report.target = trial.target 
+  report.candidate = trial.candidate 
+  report.status = status // remove
+  report.dependencies = loaded
+  return report
+}
+

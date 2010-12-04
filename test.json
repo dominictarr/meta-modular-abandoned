@@ -1,0 +1,21 @@
+{ "name" :"meta-modular"
+, "author": "dominictarr"
+, "tests": 
+    { "meta-modular.add.asynct": 
+      { "test": "meta-modular/test/meta-modular.add.asynct"
+      , "target": "meta-modular"
+      }
+    , "meta-modular.passes.asynct": 
+      { "test": "meta-modular/test/meta-modular.passes.asynct"
+      , "target": "meta-modular"
+      }
+    , "meta-modular.update.asynct": 
+      { "test": "meta-modular/test/meta-modular.update.asynct"
+      , "target": "meta-modular"
+      }
+    , "multi_test.asynct": 
+      { "test": "meta-modular/test/multi_test.asynct"
+      , "target": "meta-modular/multi_test"
+      }
+    }
+}

@@ -62,7 +62,16 @@
   }
   function testResult(mm,trial,cand,result,assert){
 
+    console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    console.log("   test:" + trial.test)
+    console.log("...cand:" + trial.candidate)
+    console.log(".result:" + mm.candidates.get(cand)[trial.test])
+
     var results = mm.candidates.get(cand)
+    console.log("Candidate:" + inspect(results))
+    console.log("results OKAY?: " + results[trial.test])
+    console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+
     assert.ok(results[trial.test],'MetaModular.candidates is updated with test results\n'
       + "expected results ok(" + cand + "["  + trial.test + "]),\n but it was :"
       +  inspect(results) )
