@@ -23,6 +23,8 @@ function MultiTest (){ // this does not need to be a class!
         , onError: error })
 
       function error(err){
+        console.log("EEEEEEEEEEEEEEEEERRRROR!")
+        console.log(err)
         var report = {error: err}
         makeReport(trial,'loadError',report,[])
         finished('loadError',report)
@@ -38,35 +40,51 @@ function MultiTest (){ // this does not need to be a class!
 
     remaps = {}
     remaps[trial.target] = trial.candidate
-    r = new Remapper(module,remaps)
+    var r = new Remapper(module,remaps)
 
     try {
 
       //somehow, pass _require into here! 
       //make multi test run with test in it's process. 
       //then call it.  
+ 
+      //this isn't working right with tests of dependencies of the test adapter.
+      //NO, problem was didn't use var to declare 'r' was local in query
 
-      r.require(adapter).runTest(trial.test,{onSuiteDone: suiteDone})
+      r.require(adapter).runTest(trial.test,{onSuiteDone: suiteDone, onError: onError})
 
     } catch (err) {
-      var report = makeReport(trial,'loadError',{error: err})
+      onError(err)
+    }
+
+    function onError(error){
+      
+      console.log(inspect(error))
+      var report = makeReport(trial,'loadError',{error: error})
       suiteDone('loadError',report)
+      
     }
 
     function suiteDone(status,report){
       var err = undefined
               
       var loaded = r.loaded ? Object.keys(r.loaded) : []
-      if(!report.error) // if there is already an error, don't over write it!
+
+       if(!report.error) // if there is already an error, don't over write it!
         if(loaded.indexOf(trial.candidate) == -1){
-         err = new Error("test :" + trial.test + "\n"
-            + "    did not load candidate: require('" + trial.candidate + "')\n"
+
+         console.log('Loaded --- ' + inspect(r))
+
+          err = new Error("test :" + trial.test + "\n"
+            + "    did not load candidate: '" + trial.candidate + "'\n"
+            + "    into target: '" + trial.target + "'\n"
             + "    instead loaded: " + inspect (loaded) + "\n"
-            + "    should one of these be the target?"
-            )
-        report.error = err
-        report.status = 'loadError'
+            + "    should one of these be the target?" )
+
+          report.error = err
+          report.status = 'loadError'
           status = 'loadError'
+
         }
       makeReport(trial,status,report,loaded)
 

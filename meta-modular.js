@@ -9,6 +9,7 @@ var dirty = require('dirty')
   , inspect = require('util').inspect
   , style = require('style')
   , log   = console.log
+  , styleError = require('style/error').styleError
 MetaModular.prototype = EventEmitter.prototype
 
 function MetaModular (name){
@@ -130,7 +131,7 @@ MetaModular.prototype.update_pair = function (test,cand,callback){
   var trial = 
     { test: test
     , target: self.tests.get(test).target
-    , candidate:  cand  } 
+    , candidate:  cand  }
 
   queue.push([trial,callback])
   if(!testing)
@@ -157,7 +158,6 @@ MetaModular.prototype.update_pair = function (test,cand,callback){
 
     function done(status,report){
       log("~~~ TEST DONE ~~~~~~~~~~~~~~~~")
-
       log('   test : ' + _trial.test)
       log('   cand : ' + _trial.candidate)
       log(' status : ' + report.status)
@@ -174,14 +174,11 @@ MetaModular.prototype.update_pair = function (test,cand,callback){
 
       self.tests.set(_trial.test,results_test)
 
-      console.log('results:')
-      console.log(self.candidates.get(_trial.candidate))
-      console.log(self.tests.get(_trial.test))
+      if(report.status == 'loadError')
+        log(styleError(report.error))
 
       testing = false
-      console.log('CALLBACK>>>')
       _callback(status,report,self)
-      console.log('<<<CALLBACK')
       setTimeout(next,1)
     }
   }

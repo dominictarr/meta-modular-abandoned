@@ -18,37 +18,33 @@ function isCalled(test,func,deadline,obj){
   }
 }
 
+/*exports['run a test against object which module.exports =  function'] = function (test){
+  var mt = MultiTest
+    , trial = 
+        { test: 'query/query.asynct.js'
+        , target: 'query'
+        , candidate: 'query'
+        }
+  checkTestTrial(test,'success',trial,test.finish)
+}*/
+
+
 function checkTestTrial (test,status,trial,next){
   var it = describe(trial,"A MultiTest trial")
     it.should.have.property('candidate').a('string')
     it.should.have.property('target').a('string')
     it.should.have.property('test').a('string')
 
-  console.log()
-  console.log()
-  console.log(">>>>>> STARTING TEST")
-  console.log()
-  console.log(trial)
-  console.log()
-
   MultiTest.run(trial,makeCheckResult(status))
 
   function makeCheckResult(status){
-/*    var zero = pass ? 'numFailures' : 'numSuccesses'
-      , oneOrMore = pass ? 'numSuccesses' : 'numFailures'*/
-//      , result = pass ? 'pass' : 'fail'
 
     return isCalled(test,checkResult) 
     
     function checkResult(status,report){
 
-//      console.log(inspect(report))
-
-      test.ifError(report.error)
-//      test.ifError(status)//this test is failing because 
-      /*test us being run as child process, which means that it can't be seen by remap*/
+    test.ifError(report.error)
       
-    console.log("STATUIS:" + status);
 
       test.equal(report.test,trial.test,'report has correct .test property')
       test.equal(report.target,trial.target,'report has correct .target property')
@@ -61,6 +57,7 @@ function checkTestTrial (test,status,trial,next){
   }
 }
 
+
 exports['run a test'] = function (test){
 
   var mt = MultiTest
@@ -71,6 +68,7 @@ exports['run a test'] = function (test){
         }
   checkTestTrial(test,'success',trial,test.finish)
 }
+
 
 exports['run a test with a candidate in place of a target'] = function (test){
 
@@ -117,8 +115,8 @@ var mt = MultiTest
   MultiTest.run(wrongCandidateTrial ,c)
 
   function c(status,report){
+    console.log('DONE!')
     test.equal(status,'error')
-
    test.finish()
   }
 }
@@ -144,7 +142,7 @@ var mt = MultiTest
   }
 }
 
-/*
+
 exports ['catch fatal error running module'] = function (test){
 var mt = MultiTest
     , wrongCandidateTrial = 
@@ -156,7 +154,7 @@ var mt = MultiTest
   MultiTest.run(wrongCandidateTrial ,c)
 
   function c(status,report){
-    test.ifError(report.error)
+//    test.ifError(report.error)
     test.equal(status,'loadError')
 
     test.finish()
