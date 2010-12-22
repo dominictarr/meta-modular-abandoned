@@ -115,7 +115,6 @@ var mt = MultiTest
   MultiTest.run(wrongCandidateTrial ,c)
 
   function c(status,report){
-    console.log('DONE!')
     test.equal(status,'error')
    test.finish()
   }

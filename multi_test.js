@@ -5,33 +5,51 @@ natural2 passes test/natural.child, and test/natural.random.child
 */
 
 
-var child = require('child')
+var child = require('child/child_stdout2')
+//var child = require('child/child')
   , assert = require('assert')
   , inspect = require('inspect')
   , Remapper = require('remap/remapper')
+  , log = require('logger')
   
 function MultiTest (){ // this does not need to be a class!
 
   this.run = run
   this.unsafe = unsafe
   
+  /*
+    time to standardidize the calling interface for a test runner.
+    
+    testname | {test : {replace : with}}
+    , { onSuiteStart: ... 
+      , onTestStart: ...
+      , onTestDone: ...
+      , onSuiteDone: ...
+      , onError: ... }
+
+    what if i just add support for remapping into child?
+    
+    it would have to send back the load report at exit, 
+    or have two way communication.
+  */
+  
   function run (trial,finished,adapter) {
-      child.run(
-        { require: __filename
-        , function: 'unsafe'
-        , args: [trial,finished,adapter]
-        , onError: error })
+      var options = 
+          { require: __filename
+          , function: 'unsafe'
+          , args: [trial,finished,adapter]
+          , onError: error }
+
+      child.run(options)
 
       function error(err){
-        console.log("EEEEEEEEEEEEEEEEERRRROR!")
-        console.log(err)
         var report = {error: err}
         makeReport(trial,'loadError',report,[])
         finished('loadError',report)
       }
   }
 
-  function unsafe (trial,finished,adapter){
+  function unsafe (trial,opts,adapter){
     adapter = adapter || 'meta-test/asynct_adapter'
 
     assert.ok('string' === typeof trial.test,'trial.test is a string')
@@ -41,15 +59,13 @@ function MultiTest (){ // this does not need to be a class!
     remaps = {}
     remaps[trial.target] = trial.candidate
     var r = new Remapper(module,remaps)
-
+      , finished 
+    if('function' == typeof opts)
+        finished = opts
+      else
+        finished = opts.onSuiteDone
+      
     try {
-
-      //somehow, pass _require into here! 
-      //make multi test run with test in it's process. 
-      //then call it.  
- 
-      //this isn't working right with tests of dependencies of the test adapter.
-      //NO, problem was didn't use var to declare 'r' was local in query
 
       r.require(adapter).runTest(trial.test,{onSuiteDone: suiteDone, onError: onError})
 
@@ -59,7 +75,6 @@ function MultiTest (){ // this does not need to be a class!
 
     function onError(error){
       
-      console.log(inspect(error))
       var report = makeReport(trial,'loadError',{error: error})
       suiteDone('loadError',report)
       
@@ -73,7 +88,7 @@ function MultiTest (){ // this does not need to be a class!
        if(!report.error) // if there is already an error, don't over write it!
         if(loaded.indexOf(trial.candidate) == -1){
 
-         console.log('Loaded --- ' + inspect(r))
+//         console.log('Loaded --- ' + inspect(r))
 
           err = new Error("test :" + trial.test + "\n"
             + "    did not load candidate: '" + trial.candidate + "'\n"
